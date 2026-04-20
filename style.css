@@ -1,0 +1,164 @@
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont;
+    background: #0f0f0f;
+    color: white;
+  }
+  
+  /* CONTENEDOR */
+  .app {
+    max-width: 500px;
+    margin: auto;
+    padding: 10px;
+  }
+  
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 10px;
+  }
+  
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  
+  .tabs button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #222;
+    color: white;
+    transition: 0.2s;
+  }
+  
+  .tabs button.active {
+    background: #00c853;
+  }
+  
+  /* SECCIONES */
+  .tab {
+    display: none;
+  }
+  
+  .tab.active {
+    display: block;
+  }
+  
+  /* CARDS */
+  .card {
+    background: #1c1c1e;
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    transition: transform 0.15s ease;
+  }
+  
+  .card:active {
+    transform: scale(0.98);
+  }
+  
+  /* INPUTS */
+  input, select, button {
+    width: 100%;
+    padding: 12px;
+    margin: 5px 0;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+  }
+  
+  input, select {
+    background: #2c2c2e;
+    color: white;
+  }
+  
+  /* BOTONES */
+  button {
+    background: #00c853;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  button:active {
+    transform: scale(0.97);
+  }
+  
+  /* 🔥 BOTÓN GRANDE (modo gym) */
+  .big-button {
+    font-size: 18px;
+    padding: 16px;
+  }
+  
+  /* 🔥 BOTONES RÁPIDOS */
+  .quick-buttons {
+    display: flex;
+    gap: 5px;
+  }
+  
+  .quick-buttons button {
+    flex: 1;
+  }
+  
+  /* LISTAS */
+  li {
+    background: #2c2c2e;
+    padding: 10px;
+    border-radius: 10px;
+    margin: 5px 0;
+    transition: 0.2s;
+  }
+  
+  li:active {
+    transform: scale(0.97);
+  }
+  
+  /* 🔥 EJERCICIO ACTIVO */
+  li.active {
+    background: #00c853;
+    font-weight: bold;
+  }
+  
+  /* TIMER */
+  #timerDisplay {
+    text-align: center;
+    font-size: 40px;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #00c853;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 20px;
+    opacity: 0;
+    transition: 0.3s;
+    font-weight: bold;
+    z-index: 999;
+  }
+  
+  #toast.show {
+    opacity: 1;
+  }
+  
+  /* GRÁFICO */
+  canvas {
+    margin-top: 10px;
+  }
+  
+  /* SCROLL MÁS SUAVE */
+  html {
+    scroll-behavior: smooth;
+  }

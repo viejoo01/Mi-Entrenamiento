@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Entrenamiento</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-title" content="Mi Entrenamiento">
+  <meta name="theme-color" content="#0f0f0f">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <header>
+    <h1>🏋️ Mi Entrenamiento</h1>
+  </header>
+
+  <nav class="tabs">
+    <button onclick="showTab(event,'rutina')" class="active">Rutina</button>
+    <button onclick="showTab(event,'entreno')">Entrenar</button>
+    <button onclick="showTab(event,'stats')">Stats</button>
+  </nav>
+
+  <!-- RUTINA -->
+  <section id="rutina" class="tab active">
+
+    <div class="card">
+      <input type="text" id="dayName" placeholder="Nuevo día (Push, Pull...)">
+      <button onclick="addDay()">Agregar Día</button>
+    </div>
+
+    <div class="card">
+      <select id="daySelect" onchange="renderExercises()"></select>
+    </div>
+
+    <div class="card">
+      <input type="text" id="exerciseName" placeholder="Ejercicio">
+      <button onclick="addExercise()">Agregar Ejercicio</button>
+    </div>
+
+  </section>
+
+  <!-- ENTRENAR -->
+  <section id="entreno" class="tab">
+
+    <button onclick="startGuidedMode()">▶️ Iniciar rutina</button>
+
+    <div class="card">
+      <h3>Ejercicios</h3>
+      <ul id="exerciseList"></ul>
+    </div>
+
+    <div class="card">
+      <input type="number" id="weight" placeholder="Peso">
+      <input type="number" id="reps" placeholder="Reps">
+
+      <!-- 🔥 BOTÓN GRANDE PARA USO REAL -->
+      <button onclick="addRecord()" class="big-button">
+        ➕ Siguiente serie
+      </button>
+    </div>
+
+    <div class="card">
+      <h3>⏱️ Descanso</h3>
+
+      <input type="number" id="restTime" value="60">
+
+      <div class="quick-buttons">
+        <button onclick="quickRest(30)">30s</button>
+        <button onclick="quickRest(60)">60s</button>
+        <button onclick="quickRest(90)">90s</button>
+      </div>
+
+      <button onclick="startTimer()">Iniciar descanso</button>
+
+      <h2 id="timerDisplay">00:00</h2>
+    </div>
+
+  </section>
+
+  <!-- STATS -->
+  <section id="stats" class="tab">
+
+    <div class="card">
+      <h3>Historial</h3>
+      <ul id="history"></ul>
+    </div>
+
+    <div class="card">
+      <h3>📊 Progreso</h3>
+      <canvas id="progressChart"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>📤 Datos</h3>
+
+      <button onclick="exportJSON()">Exportar Backup (JSON)</button>
+
+      <input type="file" id="importFile" accept=".json" onchange="importJSON(event)">
+
+      <button onclick="exportCSV()">Exportar Excel (CSV)</button>
+    </div>
+
+  </section>
+
+</div>
+
+<!-- 🔥 NOTIFICACIONES -->
+<div id="toast"></div>
+
+<!-- LIBRERÍAS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
