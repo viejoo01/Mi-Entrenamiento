@@ -1,10 +1,12 @@
 let data = JSON.parse(localStorage.getItem("data")) || [];
+
 let currentExercise = null;
 let timerInterval = null;
 let chart = null;
+
 let guidedMode = false;
 let guidedIndex = 0;
-let currentSet = 1;
+
 // 💾 GUARDAR
 function save() {
   localStorage.setItem("data", JSON.stringify(data));
@@ -19,7 +21,9 @@ function showTab(event, tabId) {
   event.target.classList.add("active");
 }
 
-// 🔹 DÍAS
+// =========================
+// 📅 DÍAS
+// =========================
 function addDay() {
   const input = document.getElementById("dayName");
   const name = input.value.trim();
@@ -35,36 +39,75 @@ function addDay() {
 
 function renderDays() {
   const select = document.getElementById("daySelect");
-  select.innerHTML = "";
+  const list = document.getElementById("dayList");
+
+  if (select) select.innerHTML = "";
+  if (list) list.innerHTML = "";
 
   data.forEach((d, i) => {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = d.name;
-    select.appendChild(option);
+    // SELECT
+    if (select) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = d.name;
+      select.appendChild(option);
+    }
+
+    // LISTA VISUAL
+    if (list) {
+      const li = document.createElement("li");
+      li.textContent = d.name;
+      list.appendChild(li);
+    }
   });
 
   renderExercises();
 }
 
-// 🔹 EJERCICIOS
+// =========================
+// 🧠 DETECTAR TIPO EJERCICIO
+// =========================
+function getIncrementByExercise(name) {
+  const lower = name.toLowerCase();
+
+  if (
+    lower.includes("mancuerna") ||
+    lower.includes("mancuernas") ||
+    lower.includes("db") ||
+    lower.includes("dumbbell")
+  ) {
+    return 2.5;
+  }
+
+  return 5;
+}
+
+// =========================
+// ⚙️ EJERCICIOS
+// =========================
 function addExercise() {
   const dayIndex = document.getElementById("daySelect").value;
-  const input = document.getElementById("exerciseName").value;
+  const name = document.getElementById("exerciseName").value;
 
-  if (!input) return;
+  if (!name) return;
 
   if (!data[dayIndex]) {
     showToast("Primero creá un día");
     return;
   }
 
-  const sets = parseInt(prompt("¿Cuántas series?")) || 3;
+  const baseWeight = parseFloat(prompt("Peso base (kg)")) || 0;
+  const sets = parseInt(prompt("Series")) || 3;
+  const reps = parseInt(prompt("Reps objetivo")) || 10;
+  const rest = parseInt(prompt("Descanso (segundos)")) || 60;
 
   data[dayIndex].exercises.push({
-    name: input,
-    history: [],
-    targetSets: sets
+    name,
+    baseWeight,
+    targetSets: sets,
+    reps,
+    rest,
+    history: []
   });
 
   document.getElementById("exerciseName").value = "";
@@ -73,63 +116,101 @@ function addExercise() {
   renderExercises();
 }
 
+// =========================
+// 📋 RENDER EJERCICIOS
+// =========================
 function renderExercises() {
-  const dayIndex = document.getElementById("daySelect").value;
+  const dayIndex = document.getElementById("daySelect")?.value;
   const list = document.getElementById("exerciseList");
+  const configList = document.getElementById("exerciseConfigList");
 
-  list.innerHTML = "";
+  if (list) list.innerHTML = "";
+  if (configList) configList.innerHTML = "";
 
   if (!data[dayIndex]) return;
 
   data[dayIndex].exercises.forEach((ex, i) => {
-    const li = document.createElement("li");
+    // 👉 LISTA ENTRENAR
+    if (list) {
+      const li = document.createElement("li");
+      li.textContent = ex.name;
 
-    li.textContent = ex.name;
+      if (i === currentExercise) li.classList.add("active");
 
-    if (i === currentExercise) {
-      li.classList.add("active");
+      li.onclick = () => {
+        currentExercise = i;
+        renderExercises();
+        renderHistory(i);
+        showToast("Ejercicio: " + ex.name);
+      };
+
+      list.appendChild(li);
     }
 
-    li.onclick = () => {
-      currentExercise = i;
-      renderExercises();
-      renderHistory(i);
+    // 👉 LISTA CONFIG
+    if (configList) {
+      const li = document.createElement("li");
 
-      showToast("Ejercicio: " + ex.name);
-    };
+      li.innerHTML = `
+        <strong>${ex.name}</strong><br>
+        <span class="small">
+          Base: ${ex.baseWeight || 0}kg |
+          Series: ${ex.targetSets} |
+          Reps: ${ex.reps} |
+          Descanso: ${ex.rest}s
+        </span>
+      `;
 
-    list.appendChild(li);
+      configList.appendChild(li);
+    }
   });
 }
 
-// 🔹 HISTORIAL + STATS
+// =========================
+// 📊 HISTORIAL
+// =========================
 function renderHistory(exIndex) {
   currentExercise = exIndex;
-
-  const exercise = data[dayIndex].exercises[exIndex];
-  const setsDone = exercise.history.length % exercise.targetSets || 0;
-  const seriesInfo = document.createElement("li");
-
-  seriesInfo.innerHTML = `📊 Serie ${setsDone + 1} / ${exercise.targetSets}`;
-  seriesInfo.classList.add("active");
-  
-  historyList.appendChild(seriesInfo);
 
   const dayIndex = document.getElementById("daySelect").value;
   const historyList = document.getElementById("history");
 
   historyList.innerHTML = "";
 
+  const exercise = data[dayIndex].exercises[exIndex];
   const history = exercise.history;
+
+  // 🔥 SERIES
+  const setsDone = history.length % exercise.targetSets || 0;
+
+  const seriesInfo = document.createElement("li");
+  seriesInfo.innerHTML = `📊 Serie ${setsDone + 1} / ${exercise.targetSets}`;
+  seriesInfo.classList.add("active");
+  historyList.appendChild(seriesInfo);
+
+  // 🔥 AUTOCOMPLETE
+  if (history.length === 0) {
+    document.getElementById("weight").value = exercise.baseWeight || "";
+    document.getElementById("reps").value = exercise.reps || "";
+  }
 
   const stats = calculateStats(history);
   const suggestion = getSuggestion(history);
 
-  // 🔥 Autocompletar último set
   if (stats) {
-    document.getElementById("weight").value = stats.last.weight;
+    document.getElementById("weight").value =
+      stats.last.weight || exercise.baseWeight;
+
     document.getElementById("reps").value = stats.last.reps;
     document.getElementById("weight").focus();
+  }
+
+  // 🔥 BOTÓN DINÁMICO
+  const increment = getIncrementByExercise(exercise.name);
+  const btn = document.getElementById("increaseBtn");
+
+  if (btn) {
+    btn.textContent = `🔼 Subir nivel (+${increment}kg)`;
   }
 
   // 📊 STATS
@@ -137,7 +218,7 @@ function renderHistory(exIndex) {
     const statsBox = document.createElement("li");
 
     statsBox.innerHTML = `
-      🏆 PR: ${stats.bestWeight} kg <br>
+      🏆 PR: ${stats.bestWeight}kg <br>
       💪 Volumen máx: ${stats.bestVolume} <br>
       📊 Promedio: ${stats.avgVolume} <br>
       ⚡ Último: ${stats.last.weight}kg x ${stats.last.reps}
@@ -163,7 +244,9 @@ function renderHistory(exIndex) {
   renderChart(history);
 }
 
-// 🔹 REGISTRO
+// =========================
+// ➕ REGISTRO
+// =========================
 function addRecord() {
   const dayIndex = document.getElementById("daySelect").value;
 
@@ -194,40 +277,42 @@ function addRecord() {
 
   save();
   renderHistory(currentExercise);
+
   showToast("Serie guardada");
-  document.getElementById("weight").focus();
 
-  if (isPR) {
-    showToast("🔥 Nuevo récord!");
-  }
+  if (isPR) showToast("🔥 Nuevo récord!");
 
-  if (guidedMode) {
-    moveToNextExercise();
-  }
-  if (guidedMode) {
-    handleSetProgress();
-  }
+  handleSetProgress();
   startTimer();
 }
-function moveToNextExercise() {
+
+// =========================
+// 🔼 PROGRESIÓN
+// =========================
+function increaseWeight() {
   const dayIndex = document.getElementById("daySelect").value;
-  const exercises = data[dayIndex].exercises;
 
-  if (guidedIndex < exercises.length - 1) {
-    guidedIndex++;
-    currentExercise = guidedIndex;
-
-    renderExercises();
-    renderHistory(currentExercise);
-
-    showToast("➡️ " + exercises[currentExercise].name);
-  } else {
-    guidedMode = false;
-    showToast("🏁 Rutina terminada");
+  if (currentExercise === null) {
+    showToast("Seleccioná un ejercicio");
+    return;
   }
+
+  const exercise = data[dayIndex].exercises[currentExercise];
+
+  const increment = getIncrementByExercise(exercise.name);
+
+  exercise.baseWeight = (exercise.baseWeight || 0) + increment;
+
+  save();
+
+  document.getElementById("weight").value = exercise.baseWeight;
+
+  showToast(`+${increment}kg → ${exercise.baseWeight}kg`);
 }
 
+// =========================
 // 📊 STATS
+// =========================
 function calculateStats(history) {
   if (history.length === 0) return null;
 
@@ -250,7 +335,9 @@ function calculateStats(history) {
   return { bestWeight, bestVolume, avgVolume, last };
 }
 
+// =========================
 // 🧠 SUGERENCIA
+// =========================
 function getSuggestion(history) {
   if (history.length === 0) return null;
 
@@ -264,7 +351,9 @@ function getSuggestion(history) {
   return { weight: suggestedWeight, reps: last.reps };
 }
 
+// =========================
 // ⏱️ TIMER
+// =========================
 function startTimer() {
   let time = parseInt(document.getElementById("restTime").value);
 
@@ -282,8 +371,7 @@ function startTimer() {
 
       if (navigator.vibrate) navigator.vibrate(500);
 
-      const audio = new Audio("https://www.soundjay.com/buttons/beep-07.wav");
-      audio.play();
+      new Audio("https://www.soundjay.com/buttons/beep-07.wav").play();
 
       showToast("⏰ Descanso terminado");
     }
@@ -298,48 +386,88 @@ function updateDisplay(seconds) {
     `${min.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
 }
 
+// =========================
 // 🔔 TOAST
+// =========================
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
   toast.classList.add("show");
 
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2000);
+  setTimeout(() => toast.classList.remove("show"), 2000);
 }
 
-// ⚡ ATAJOS TECLADO (clave en uso real)
-document.getElementById("weight").addEventListener("keypress", e => {
-  if (e.key === "Enter") document.getElementById("reps").focus();
-});
+// =========================
+// 🧠 PROGRESO SERIES
+// =========================
+function handleSetProgress() {
+  const dayIndex = document.getElementById("daySelect").value;
+  const exercise = data[dayIndex].exercises[currentExercise];
 
-document.getElementById("reps").addEventListener("keypress", e => {
-  if (e.key === "Enter") addRecord();
-});
+  const setsDone = exercise.history.length % exercise.targetSets;
 
-// ⏱️ QUICK REST
-function quickRest(seconds) {
-  document.getElementById("restTime").value = seconds;
-  startTimer();
+  if (setsDone !== 0) {
+    showToast(`💪 Serie ${setsDone}/${exercise.targetSets}`);
+  } else {
+    showToast("✅ Ejercicio completado");
+    moveToNextExercise();
+  }
 }
 
-// 📤 EXPORT JSON
+function moveToNextExercise() {
+  const dayIndex = document.getElementById("daySelect").value;
+  const exercises = data[dayIndex].exercises;
+
+  if (guidedIndex < exercises.length - 1) {
+    guidedIndex++;
+    currentExercise = guidedIndex;
+
+    renderExercises();
+    renderHistory(currentExercise);
+
+    showToast("➡️ " + exercises[currentExercise].name);
+  } else {
+    guidedMode = false;
+    showToast("🏁 Rutina terminada");
+  }
+}
+
+// =========================
+// ▶️ MODO GUIADO
+// =========================
+function startGuidedMode() {
+  const dayIndex = document.getElementById("daySelect").value;
+
+  if (!data[dayIndex] || data[dayIndex].exercises.length === 0) {
+    showToast("No hay ejercicios");
+    return;
+  }
+
+  guidedMode = true;
+  guidedIndex = 0;
+  currentExercise = 0;
+
+  renderExercises();
+  renderHistory(0);
+
+  showToast("🔥 Rutina iniciada");
+}
+
+// =========================
+// 📤 EXPORT / IMPORT
+// =========================
 function exportJSON() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
 
   a.href = URL.createObjectURL(blob);
-  a.download = `backup-${new Date().toISOString().split("T")[0]}.json`;
+  a.download = "backup.json";
   a.click();
 
   showToast("Backup exportado");
 }
 
-// 📥 IMPORT JSON
 function importJSON(event) {
-  if (!confirm("Esto reemplazará tus datos actuales")) return;
-
   const file = event.target.files[0];
   if (!file) return;
 
@@ -352,14 +480,13 @@ function importJSON(event) {
       renderDays();
       showToast("Datos importados");
     } catch {
-      showToast("Error al importar");
+      showToast("Error");
     }
   };
 
   reader.readAsText(file);
 }
 
-// 📊 EXPORT CSV
 function exportCSV() {
   let rows = [["Día", "Ejercicio", "Fecha", "Peso", "Reps", "PR"]];
 
@@ -378,10 +505,12 @@ function exportCSV() {
   a.download = "entrenamiento.csv";
   a.click();
 
-  showToast("Exportado a Excel");
+  showToast("Exportado");
 }
 
-// 📈 GRÁFICO
+// =========================
+// 📈 CHART
+// =========================
 function renderChart(history) {
   const ctx = document.getElementById("progressChart");
   if (!ctx) return;
@@ -400,52 +529,8 @@ function renderChart(history) {
         data: weights,
         tension: 0.3
       }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { labels: { color: "white" } }
-      },
-      scales: {
-        x: { ticks: { color: "white" } },
-        y: { ticks: { color: "white" } }
-      }
     }
   });
-}
-
-function startGuidedMode() {
-  const dayIndex = document.getElementById("daySelect").value;
-
-  if (!data[dayIndex] || data[dayIndex].exercises.length === 0) {
-    showToast("No hay ejercicios en este día");
-    return;
-  }
-
-  guidedMode = true;
-  guidedIndex = 0;
-
-  currentExercise = 0;
-
-  renderExercises();
-  renderHistory(0);
-
-  showToast("🔥 Rutina iniciada");
-}
-
-function handleSetProgress() {
-  const dayIndex = document.getElementById("daySelect").value;
-  const exercise = data[dayIndex].exercises[currentExercise];
-
-  const totalSetsDone = exercise.history.length;
-  const setsInThisExercise = totalSetsDone % exercise.targetSets;
-
-  if (setsInThisExercise !== 0) {
-    showToast(`💪 Serie ${setsInThisExercise}/${exercise.targetSets}`);
-  } else {
-    showToast("✅ Ejercicio completado");
-    moveToNextExercise();
-  }
 }
 
 // INIT

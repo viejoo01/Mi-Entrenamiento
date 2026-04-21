@@ -16,24 +16,40 @@
 <body>
 
 <div class="app">
-
+ 
   <header>
     <h1>🏋️ Mi Entrenamiento</h1>
   </header>
 
+  <!-- 🔥 NUEVAS TABS -->
   <nav class="tabs">
-    <button onclick="showTab(event,'rutina')" class="active">Rutina</button>
+    <button onclick="showTab(event,'dias')" class="active">Días</button>
+    <button onclick="showTab(event,'config')">Configurar</button>
     <button onclick="showTab(event,'entreno')">Entrenar</button>
     <button onclick="showTab(event,'stats')">Stats</button>
   </nav>
 
-  <!-- RUTINA -->
-  <section id="rutina" class="tab active">
+  <!-- ========================= -->
+  <!-- 📅 GESTIÓN DE DÍAS -->
+  <!-- ========================= -->
+  <section id="dias" class="tab active">
 
     <div class="card">
-      <input type="text" id="dayName" placeholder="Nuevo día (Push, Pull...)">
+      <input type="text" id="dayName" placeholder="Ej: Lunes - Pecho/Hombro/Tríceps">
       <button onclick="addDay()">Agregar Día</button>
     </div>
+
+    <div class="card">
+      <h3>Lista de días</h3>
+      <ul id="dayList"></ul>
+    </div>
+
+  </section>
+
+  <!-- ========================= -->
+  <!-- ⚙️ CONFIGURAR EJERCICIOS -->
+  <!-- ========================= -->
+  <section id="config" class="tab">
 
     <div class="card">
       <select id="daySelect" onchange="renderExercises()"></select>
@@ -44,15 +60,22 @@
       <button onclick="addExercise()">Agregar Ejercicio</button>
     </div>
 
+    <div class="card">
+      <h3>Ejercicios del día</h3>
+      <ul id="exerciseConfigList"></ul>
+    </div>
+
   </section>
 
-  <!-- ENTRENAR -->
+  <!-- ========================= -->
+  <!-- 💪 ENTRENAR -->
+  <!-- ========================= -->
   <section id="entreno" class="tab">
 
     <button onclick="startGuidedMode()">▶️ Iniciar rutina</button>
 
     <div class="card">
-      <h3>Ejercicios</h3>
+      <h3 id="currentExerciseTitle">Ejercicios</h3>
       <ul id="exerciseList"></ul>
     </div>
 
@@ -60,9 +83,13 @@
       <input type="number" id="weight" placeholder="Peso">
       <input type="number" id="reps" placeholder="Reps">
 
-      <!-- 🔥 BOTÓN GRANDE PARA USO REAL -->
       <button onclick="addRecord()" class="big-button">
         ➕ Siguiente serie
+      </button>
+
+      <!-- 🔥 NUEVO BOTÓN PROGRESIÓN -->
+      <button id="increaseBtn" onclick="increaseWeight()">
+        🔼 Subir nivel
       </button>
     </div>
 
@@ -84,7 +111,9 @@
 
   </section>
 
-  <!-- STATS -->
+  <!-- ========================= -->
+  <!-- 📊 STATS -->
+  <!-- ========================= -->
   <section id="stats" class="tab">
 
     <div class="card">
@@ -111,10 +140,8 @@
 
 </div>
 
-<!-- 🔥 NOTIFICACIONES -->
 <div id="toast"></div>
 
-<!-- LIBRERÍAS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="app.js"></script>
 
